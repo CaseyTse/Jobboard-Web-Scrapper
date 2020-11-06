@@ -26,8 +26,11 @@ EE_base_page = "https://ca.indeed.com/jobs?q=Electrical+Engineer&start="
 
 SE_first_page = "https://ca.indeed.com/Software-Engineer-jobs"
 SE_base_page = "https://ca.indeed.com/jobs?q=Software+Engineer&start="
-
-
+ws1 = wb.active
+ws1.title = "EE" #Title means its the title of the page itself.
+ws2 = wb.create_sheet("SE")
+ws3 = wb.create_sheet("CE")
+ws4 = wb.create_sheet("EIT")
 
 def get_description(page_url,iteration,ws):
     j = iteration
@@ -39,14 +42,13 @@ def get_description(page_url,iteration,ws):
 
         get_a = job_postings.find_element_by_tag_name("a") #grab the element with tag name "a"
         get_title = get_a.get_attribute("title") # grab the innerhtml within the a tag
-
+        #error here NoSuchElementException, partial link text, selector = ""
         job_postings.find_element_by_partial_link_text(get_title).click()
-        sleep(5)
+        sleep(7)
 
         text = chrome.find_element_by_id("vjs-desc").get_attribute("innerHTML")
-        sleep(5)
+        sleep(7)
         cleaned_text = text.replace("<p>","").replace("<b>","").replace("</b>","").replace("</p>","\n").replace("<ul>","").replace("</ul>","\n").replace("<li>","").replace("</li>","\n")
-        print(cleaned_text)
 
         if i == 0:
             ws['F' + str(2 + (OFFSET * j))] = cleaned_text
@@ -88,31 +90,28 @@ def Style_Ws(ws):
     ws.column_dimensions["E"].width = 35
     ws.column_dimensions["F"].width = 85
 
-def Get_all_jobs(first_url,base_url,iterations,File_Ext):
+def Get_all_jobs(first_url,base_url,iterations,ws):
     for i in range(0,iterations):
 
         if i == 0:
-            ws = wb.active
-            ws.title = "Page " + str(i) #Title means its the title of the page itself.
             Style_Ws(ws)
             get_job(first_url,i,ws)
-
         else:
             get_job(base_url + str(PAGE_EXTENSION*i),i,ws)
 
-    wb.save(filename = Get_file_name(File_Ext))
+    wb.save(filename = Get_file_name())
 
 #Programmer: Casey Tse
 #Date: September 15,2020
 #Parameters: Asks for the File Extension
 #Function: Returns a string + current date to be used in saving Excel File Name
-def Get_file_name(File_Ext):
+def Get_file_name():
     x = datetime.datetime.now()
     year = x.strftime("%Y")
     month = x.strftime("%m")
     day = x.strftime("%d")
     date = (day + "_" + month + "_" + year)
-    return ("Job_Postings for_" + File_Ext + "_" + date +".xlsx")
+    return ("Job_Postings_for_" + date +".xlsx")
 
 #Programmer: Casey Tse
 #Date: September 15,2020
@@ -121,7 +120,7 @@ def Get_file_name(File_Ext):
 #Grabs the description of the job, and places it into a excel file
 def get_job(page_url,iteration,ws):
     j = iteration
-    get_description(page_url,j,ws)
+    # get_description(page_url,j,ws)
     sleep(15)
     page = requests.get(page_url)
     if not page.status_code == 200:
@@ -166,5 +165,8 @@ def get_job(page_url,iteration,ws):
 if __name__ == "__main__":
     print("Hello World!")
     # generate_array(ws,1)
-    Get_all_jobs(EE_first_page,EE_base_page,1,"EE")
+    Get_all_jobs(EE_first_page,EE_base_page,1,ws1)
+    Get_all_jobs(SE_first_page,SE_base_page,1,ws2)
+    Get_all_jobs(EE_first_page,EE_base_page,1,ws3)
+    Get_all_jobs(SE_first_page,SE_base_page,1,ws4)
     # Get_all_jobs(SE_first_page,SE_base_page,1,"SE")
